@@ -1,37 +1,44 @@
-def create_mapping(source, target):
-    char_mapping = dict()
-    for i in range(len(source)):
-        if source[i] not in char_mapping:
-            char_mapping[source[i]] = target[i]
-    return char_mapping
+from typing import List
+import sys
+import heapq
 
-def inverse_mapping(mapping):
-    return {value: key for key, value in mapping.items()}
+dp = dict()
 
-def apply_mapping(input_str, char_mapping):
-    result = ""
-    for char in input_str:
-        result += char_mapping[char]
-    return result
+operations = {
+    "PROTON": (1, 0),
+    "NEUTRON": (0, 1),
+    "ALPHA": (-2, -2)
+}
 
-def solve_cipher():
-    f1 = "JACKIE WILL BUDGET FOR THE MOST EXPENSIVE ZOOLOGY EQUIPMENT"
-    f2 = "DAOFJK XJCC PVQNKW STH WUK RTBW KYZKLBJGK MTTCTNI KEVJZRKLW"
-    s1 = "ZELDA MIGHT FIX THE JOB GROWTH PLANS VERY QUICKLY ON MONDAY"
-    s2 = "XSFIY TANBD QAO DBS MPR NJPLDB GFYCK USJW HEAZVFW PC TPCIYW"
-    target = "RDJV VZVJVFLR YBV UFRLYGZV M FVVH LD MFNVRLMCYLV JDBV"
 
-    first_mapping = inverse_mapping(create_mapping(f1, f2))
-    second_mapping = inverse_mapping(create_mapping(s1, s2))
+def solve(protons_start: int, neutrons_start: int, protons_target: int, neutrons_target: int,
+          unstable_isotopes: List[List[int]]) -> List[str]:
+    unstables = set()
+    for x, y in unstable_isotopes:
+        unstables.add((x, y))
 
-    combined_mapping = dict()
-    for key in first_mapping:
-        combined_mapping[key] = second_mapping[first_mapping[key]]
+    current = (protons_start, neutrons_start)
+    target = (protons_target, neutrons_target)
 
-    print(combined_mapping)
+    # use djiktra to return the shortest path from start to target using the operations
+    q = [(0, current, [])]
+    while q:
+        cost, current, path = heapq.heappop(q)
+        if current == target:
+            return path
 
-    result = apply_mapping(target, combined_mapping)
-    return result
+        if current in dp:
+            continue
 
-if __name__ == "__main__":
-    print(solve_cipher())
+        dp[current] = cost
+
+        for op, (p, n) in operations.items():
+            new = (current[0] + p, current[1] + n)
+            if new[0] < 0 or new[1] < 0 or new[0] >= 30 or new[1] >= 20:
+                continue
+            if new not in dp and new not in unstables:
+                heapq.heappush(q, (cost + 1, new, path + [op]))
+
+    return []
+
+print(solve(8, 4, 9, 5, [[8, 3], [9, 4], [8, 5]]))
